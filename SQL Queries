@@ -1,0 +1,55 @@
+Links to the Tableau dashboard for visualizations are provided below:
+
+https://public.tableau.com/app/profile/anamita.anuva/viz/CovidAnalysisDashboard_16681390943230/Dashboard1
+https://public.tableau.com/app/profile/anamita.anuva/viz/CovidAnalysisDashboard-2/Dashboard2
+
+SQL Queries are written below:
+
+SELECT location, MAX(total_cases) as InfectionCount, MAX(total_deaths) as TotalDeathCount,
+MAX((total_cases/population))*100 as PopulationInfected
+FROM my-project-72222022.PortfolioProject.CovidDeaths
+WHERE continent is null
+GROUP BY location
+ORDER BY TotalDeathCount DESC;
+
+SELECT location, date, total_cases, new_cases, total_deaths, population
+FROM my-project-72222022.PortfolioProject.CovidDeaths
+ORDER BY 1, 2
+LIMIT 1000;
+
+SELECT location, date, total_cases, total_deaths,population, (total_cases/population)*100 as death_percentage
+FROM my-project-72222022.PortfolioProject.CovidDeaths
+where location = "United States"
+ORDER BY 1, 2
+LIMIT 1000;
+
+SELECT location, population, MAX(total_cases) as InfectionCount, MAX((total_cases/population))*100 as PopulationInfected
+FROM my-project-72222022.PortfolioProject.CovidDeaths
+GROUP BY location, population
+ORDER BY PopulationInfected DESC;
+
+SELECT location, MAX(total_cases) as InfectionCount, MAX(total_deaths) as TotalDeathCount,
+MAX((total_cases/population))*100 as PopulationInfected
+FROM my-project-72222022.PortfolioProject.CovidDeaths
+WHERE continent is null
+GROUP BY location
+ORDER BY TotalDeathCount DESC;
+
+SELECT date, SUM(new_cases) as TotalInfectionCount, SUM(new_deaths) as New_Deaths, SUM(new_deaths)/SUM(new_cases)*100 as DeathPercentage
+FROM my-project-72222022.PortfolioProject.CovidDeaths
+WHERE continent is not null
+GROUP BY date
+ORDER BY date DESC;
+
+With PopVsVac
+as
+(
+SELECT dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations, SUM(vac.new_vaccinations) OVER (PARTITION BY dea.location order by dea.location, dea.date) as RollingVaccinations
+FROM my-project-72222022.PortfolioProject.CovidDeaths as dea
+JOIN my-project-72222022.PortfolioProject.CovidVaccinations as vac
+On dea.location = vac.location
+and dea.date = vac.date
+WHERE dea.continent is not null
+)
+SELECT *, (RollingVaccinations/population)*100 as PopulationVaccinated
+FROM PopVsVac
